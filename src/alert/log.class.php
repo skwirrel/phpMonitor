@@ -4,6 +4,7 @@ class alert_log {
 
 private $fh;
 private $logLevel;
+private $invisible;
 
 public function initialize($config) {
 	logMessage("Initializing LOG alert",4);
@@ -12,6 +13,7 @@ public function initialize($config) {
 	$this->fh = false;
 	if (isset($config['file'])) $file = (string) $config['file'];
 	if (isset($config['logLevel'])) $file = (string) $config['logLevel'];
+	$this->invisible = isset($config['invisible']) && strtolower($config['invisible']) == 'yes';
 
 	if ( strlen($file) ) {
 		$thif->fh = @fopen($file,'a');
@@ -26,10 +28,10 @@ public function checkValidDetails($details) {
 }
 
 public function send( $recipientName, $details, $shortMessage, $longMessage ) {
-	if (!$fh) {
-		logMessage($longMessage,$this->logLevel);
+	if (!$this->fh) {
+		logMessage("ALERT: ".$longMessage,$this->logLevel);
 	} else {
-		fwrite( $fh, $logMessage."\n");
+		fwrite( $this->fh, $logMessage."\n");
 	}
 
 	return $this->invisible?false:true;

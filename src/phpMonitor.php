@@ -1,5 +1,26 @@
 #!/usr/bin/php
 <?php
+/*
+
+Copyright Ben Jefferson 2013, ben.jefferson@brighter-connections.com
+
+This file is part of the phpMonitor tool
+
+phpMonitor is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+phpMonitor is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+
+*/
+
 
 if (isset($argv[1])) {
 	$configFile=$argv[1];
@@ -233,7 +254,7 @@ while (1) {
 		foreach ($mediums as $mediumName) {
 			$details = $recipients[$recipientName]->getDetailsForMedium($mediumName);
 			# Skip this medium if we don't have any corresponding details for this user
-			if (!is_array($details) || !count($details)) {
+			if (!is_array($details)) {
 				logMessage("Skipping medium $mediumName for user $recipientName because there are no details for this medium for this user",8);
 				continue;
 			}
