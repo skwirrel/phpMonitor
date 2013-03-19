@@ -1,0 +1,167 @@
+<monitorConfig>
+<!--
+ALL times/intervals/delays etc are specified in seconds
+
+logTimestampInterval controls how often a timestamp is included in the log file output - default is 10mins
+	set this to zero if you want a timestamp on every log line
+logFile can be empty or "-" if you want logging to STDOUT
+logLevel 0 => only errors and major events (e.g. startup)
+logLevel 10 => debug
+defaultInterval is the monitoring interval - this can be overridden on a per-monitor basis with an interval="" attribute
+-->
+<global
+	defaultInterval="600"
+	logLevel="3"
+	logFile="/var/log/phpMonitor.log"
+	logTimestampInterval="600"
+>
+	
+</global>
+
+<alertMediums>
+	<!-- The order of the entries implies which will be tried first -->
+	<!-- When an alert needs to be sent each method will be tried until one non-invisible method works -->
+	
+	<!-- The email alert engine is very simple at present - there is nothing that can be configured -->
+	<email name="email" invisible="yes" />
+
+	<!-- Not implemented yet but might be kind of cool -->
+	<!-- At least one of the alert recipients would need to have twitter credentials listed -->
+	<twitter name="twitter" invisible="yes" />
+	
+	<!-- This will try and use BulkSMS first to send the message - this is a HTTP->SMS gateway -->
+	<!-- If you have internet connectivity this will probably be cheaper and more reliable -->
+	<!-- Also it doesn't require a 3G dongle of course! -->
+	<bulksms name="bulkSms1" invisible="no" username="" password="" />
+	<!-- You might want to try more than one bulk SMS account in case on runs out of credit -->
+	<bulksms name="bulkSms2" invisible="no"  username="" password="" />
+
+	<!-- The modem entries define 3G dongles -->
+	<smsServer name="3GSMS"
+		outgoingDir="/var/spool/sms/outgoing"
+		sentDir="/var/spool/sms/sent"
+		failedDir="/var/spool/sms/failed"
+		tmpDir="/tmp"
+		flash="yes"
+		timeout="90"
+	>
+		<!-- setupCommands contains any AT commands that should be fed to the modem at setup -->
+		<setupCommands>
+		</setupCommands>
+	</smsServer>
+
+</alertMediums>
+
+<alertRecipients>
+	<alertRecipient name="Ben">
+		<details medium="3GSMS" number="PHONE NUMBER HERE" />
+		<details medium="email" address="EMAIL HERE" />
+	</alertRecipient>
+	<alertRecipient name="Ed">
+		<details medium="email" address="EMAIL HERE" />
+	</alertRecipient>
+</alertRecipients>
+ 
+<monitors>
+	<!-- default interval for monitors is 10mins -->
+
+	<!-- The monitor block here defines what should happen if one of the alerting mechanisms fails -->
+	<!-- This is a special type of monitor and should only be included once -->
+	
+	<medium name="medium1" interval="">
+		<recipient name="Ben" />
+		<recipient name="Ed" />
+	</medium>
+	
+	<random name="Daily health check" message="Daily monitoring system health check" probability="100%" interval="86400">
+		<recipient name="Ben" mediums="3GSMS,email"/>
+	</random>
+	
+	<!-- The tolerance states how many seconds failure can be tolerated -->
+	<!-- bear in mind that the checks are still goverened by the interval - thus a tolerance of 1s -->
+	<!-- means you still have to wait for the interval to expire and a second failure to occur before an alert is triggered. -->
+	<vsphere interval="300" name="vSphere1" username="USERNAME" password="PASSWORD" repeatLimit="3600" tolerance="1">
+		<!-- Who to alert... -->
+		<recipient name="Ben" />
+		<recipient name="Ed" />
+
+		<!-- Which ESX hosts to monitor... -->
+		<!-- is username and/or password is added here these will override the values specified for vsphere as a whole -->
+		<!-- the name parameter should the ip address of dns name of the server to monitor -->
+		<includeHost name="Address of ESX HOST 1"/>
+		<includeHost name="Address of ESX HOST 2"/>
+
+		<!-- What to monitor... -->
+		<!-- test attribute can be one of ne|eq|gt|lt|ge|le|re -->
+		<!-- These are tests to check that everything is OK i.e. test failure triggers an alert -->
+
+		<test name="System power draw too high" parameter="/System Board 9 Power Meter/currentReading" value="22900" type="lt" />
+		<test name="Temperature sensor 12 too hot" parameter="/Other 12 Temp 30/currentReading" value="6900" type="lt" />
+		<test name="Temperature sensor 11 too hot" parameter="/Other 11 Temp 26/currentReading" value="3600" type="lt" />
+		<test name="Temperature sensor 10 too hot" parameter="/Other 10 Temp 25/currentReading" value="3600" type="lt" />
+		<test name="Temperature sensor 9 too hot" parameter="/Other 9 Temp 24/currentReading" value="3800" type="lt" />
+		<test name="Temperature sensor 8 too hot" parameter="/Other 8 Temp 23/currentReading" value="4200" type="lt" />
+		<test name="Temperature sensor 7 too hot" parameter="/Other 7 Temp 22/currentReading" value="3500" type="lt" />
+		<test name="Temperature sensor 6 too hot" parameter="/Other 6 Temp 21/currentReading" value="3600" type="lt" />
+		<test name="Temperature sensor 5 too hot" parameter="/Other 5 Temp 20/currentReading" value="3400" type="lt" />
+		<test name="Temperature sensor 4 too hot" parameter="/Other 4 Temp 19/currentReading" value="3000" type="lt" />
+		<test name="Temperature sensor 3 too hot" parameter="/Other 3 Temp 12/currentReading" value="4600" type="lt" />
+		<test name="Temperature sensor 2 too hot" parameter="/Other 2 Temp 11/currentReading" value="3800" type="lt" />
+		<test name="Temperature sensor 1b too hot" parameter="/Other 1 Temp 10/currentReading" value="4800" type="lt" />
+		<test name="Temperature sensor 1a too hot" parameter="/Other 1 Temp 1/currentReading" value="2400" type="lt" />
+		<test name="Temperature sensor 3 on expansion board too hot" parameter="/System Internal Expansion Board 3 Temp 15/currentReading" value="3700" type="lt" />
+		<test name="Temperature sensor 2 on expansion board too hot" parameter="/System Internal Expansion Board 2 Temp 14/currentReading" value="3700" type="lt" />
+		<test name="Temperature sensor 1 on expansion board too hot" parameter="/System Internal Expansion Board 1 Temp 13/currentReading" value="3400" type="lt" />
+		<test name="Power supply 2 too hot" parameter="/Power Domain 2 Temp 9/currentReading" value="3900" type="lt" />
+		<test name="Power supply 1 too hot" parameter="/Power Domain 1 Temp 8/currentReading" value="4300" type="lt" />
+		<test name="Memory module 4 too hot" parameter="/Memory Module 4 Temp 7/currentReading" value="3900" type="lt" />
+		<test name="Memory module 3 too hot" parameter="/Memory Module 3 Temp 6/currentReading" value="3900" type="lt" />
+		<test name="Memory module 2 too hot" parameter="/Memory Module 2 Temp 5/currentReading" value="3500" type="lt" />
+		<test name="Memory module 1 too hot" parameter="/Memory Module 1 Temp 4/currentReading" value="3500" type="lt" />
+		<test name="Fan 5 too fast" parameter="/System Board 5 Fan 5/currentReading" value="3550" type="lt" />
+		<test name="Fan 4 too fast" parameter="/System Board 4 Fan 4/currentReading" value="4150" type="lt" />
+		<test name="Fan 3 too fast" parameter="/System Board 3 Fan 3/currentReading" value="4200" type="lt" />
+		<test name="Fan 2 too fast" parameter="/System Board 2 Fan 2/currentReading" value="3550" type="lt" />
+		<test name="Fan 5 too slow" parameter="/System Board 5 Fan 5/currentReading" value="2000" type="gt" />
+		<test name="Fan 4 too slow" parameter="/System Board 4 Fan 4/currentReading" value="2000" type="gt" />
+		<test name="Fan 3 too slow" parameter="/System Board 3 Fan 3/currentReading" value="2000" type="gt" />
+		<test name="Fan 2 too slow" parameter="/System Board 2 Fan 2/currentReading" value="2000" type="gt" />
+		<test name="Mains power failed" parameter="/Power Supply 2 Power Supply 2/healthState/label" value="Green" type="eq" />
+		<test name="UPS power failed" parameter="/Power Supply 1 Power Supply 1/healthState/label" value="Green" type="eq" />
+	</vsphere>
+
+	<!-- The piMonitor allows Pi's to monitor each other -->
+	<!-- It expects to be able to retrieve a file containing just a unix timestamp -->
+	<!-- If the file is missing, unretreivable, or contains a timestamp more than MaxDelaySeconds ago then the alert is triggered -->
+	<piMonitor>
+		<monitor
+			alertText="Monitor A has stopped responding"
+			heartbeatUrl="http://monitora.local/heartbeatTimestamp.txt"
+			maxDelaySeconds="300">
+			<recipient name="Ben" />
+			<recipient name="Ed" />	
+		</monitor>
+		<monitor
+			alertText="Monitor B has stopped responding"
+			heartbeatUrl="http://monitorb.local/heartbeatTimestamp.txt"
+			maxDelaySeconds="300">
+			<recipient name="Ben" />
+			<recipient name="Ed" />	
+		</monitor>
+	</piMonitor>
+
+	<!-- The heartbeat sends an alert message periodically to tell people the monitoring system is still alive -->
+	<!-- day hour and minute can be a number of "*" similar to cron entries -->
+	<!-- day 1 = Monday -->
+	<heartbeat>
+		<monitor
+			day="7" hour="10" minute="0"
+			alertText="I'm still here"
+			>
+			<recipient name="Ben" />
+			<recipient name="Ed" />
+		</monitor>
+	</heartbeat>
+	
+</monitors>
+</monitorConfig>
